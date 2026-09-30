@@ -89,7 +89,7 @@ export async function execute(i: ChatInputCommandInteraction) {
   }
   const days = i.options.getInteger('days', true);
   const lim = await limitsFor(gid);
-  if (days > lim.maxRetentionDays) return reply(`Your plan allows up to ${lim.maxRetentionDays} days. Upgrade to Premium for more.`);
+  if (days > lim.maxRetentionDays) return reply(`The maximum retention is ${lim.maxRetentionDays} days.`);
   await pool.query(`INSERT INTO guild_settings (guild_id, retention_days) VALUES ($1,$2)
     ON CONFLICT (guild_id) DO UPDATE SET retention_days = EXCLUDED.retention_days`, [gid, days]);
   await audit(`retention ${days}d`);

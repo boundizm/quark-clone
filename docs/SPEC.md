@@ -19,8 +19,9 @@
 3. Attachment archiving (encrypted object storage)
 4. Web dashboard (Next.js + Discord OAuth2), public REST API + OpenAPI
 5. Message search, filters/ignore lists (channels, roles, users)
-6. Premium tiers via Stripe (longer retention, higher limits), i18n
-7. Sharding, metrics, status page
+6. i18n, public API tokens + OpenAPI, message search
+7. Premium tiers via Stripe (on hold: launch is free-only; tier limits already enforced in `src/tiers.ts`)
+8. Sharding, metrics, status page
 
 ## Legal / compliance (before launch)
 - Own name, logo, copy and assets — do not reuse third-party branding or text
