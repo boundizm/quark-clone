@@ -1,48 +1,51 @@
-import { AuditLogEvent, EmbedBuilder, type Client } from 'discord.js';
+import { AuditLogEvent, type Client } from 'discord.js';
 import { executor } from '../audit.js';
-import { sendLog } from '../logger.js';
+import { log } from '../logger.js';
 
 export function registerMemberEvents(client: Client) {
-  client.on('guildMemberAdd', (m) =>
-    sendLog(m.guild, 'member_join', new EmbedBuilder().setColor(0x2ecc71).setTitle('Member joined')
-      .setDescription(`<@${m.id}> (${m.user.tag})`)));
+  client.on('guildMemberAdd', (m) => m.user.bot
+    ? log(m.guild, 'bot_add', 'Bot added', 0x1abc9c, [`<@${m.id}> (${m.user.tag})`])
+    : log(m.guild, 'member_join', 'Member joined', 0x2ecc71, [`<@${m.id}> (${m.user.tag})`]));
 
   client.on('guildMemberRemove', async (m) => {
     const kick = await executor(m.guild, AuditLogEvent.MemberKick, m.id);
-    if (kick) {
-      return sendLog(m.guild, 'kick', new EmbedBuilder().setColor(0xe67e22).setTitle('Member kicked')
-        .setDescription(`<@${m.id}> (${m.user.tag})\nBy: ${kick.by}\nReason: ${kick.reason}`));
-    }
-    return sendLog(m.guild, 'member_leave', new EmbedBuilder().setColor(0x95a5a6).setTitle('Member left')
-      .setDescription(`<@${m.id}> (${m.user.tag})`));
+    if (kick) return log(m.guild, 'kick', 'Member kicked', 0xe67e22, [`<@${m.id}> (${m.user.tag})`, `By: ${kick.by}`, `Reason: ${kick.reason}`]);
+    return m.user.bot
+      ? log(m.guild, 'bot_remove', 'Bot removed', 0x95a5a6, [`<@${m.id}> (${m.user.tag})`])
+      : log(m.guild, 'member_leave', 'Member left', 0x95a5a6, [`<@${m.id}> (${m.user.tag})`]);
   });
 
-  client.on('guildMemberUpdate', async (oldM, newM) => {
-    if (oldM.communicationDisabledUntilTimestamp !== newM.communicationDisabledUntilTimestamp) {
-      const until = newM.communicationDisabledUntilTimestamp;
-      const t = await executor(newM.guild, AuditLogEvent.MemberUpdate, newM.id);
-      await sendLog(newM.guild, 'timeout', new EmbedBuilder().setColor(0xd35400)
-        .setTitle(until && until > Date.now() ? 'Member timed out' : 'Timeout removed')
-        .setDescription(`<@${newM.id}>${until && until > Date.now() ? `\nUntil: <t:${Math.floor(until / 1000)}:f>` : ''}\nBy: ${t?.by ?? 'unknown'}\nReason: ${t?.reason ?? 'none'}`));
+  client.on('guildMemberUpdate', async (o, n) => {
+    if (o.communicationDisabledUntilTimestamp !== n.communicationDisabledUntilTimestamp) {
+      const until = n.communicationDisabledUntilTimestamp;
+      const active = !!until && until > Date.now();
+      const t = await executor(n.guild, AuditLogEvent.MemberUpdate, n.id);
+      await log(n.guild, 'timeout', active ? 'Member timed out' : 'Timeout removed', 0xd35400, [
+        `<@${n.id}>`, ...(active ? [`Until: <t:${Math.floor(until! / 1000)}:f>`] : []),
+        `By: ${t?.by ?? 'unknown'}`, `Reason: ${t?.reason ?? 'none'}`]);
     }
-    const changes: string[] = [];
-    if (oldM.nickname !== newM.nickname) changes.push(`Nickname: \`${oldM.nickname ?? '—'}\` → \`${newM.nickname ?? '—'}\``);
-    const added = newM.roles.cache.filter((r) => !oldM.roles.cache.has(r.id));
-    const removed = oldM.roles.cache.filter((r) => !newM.roles.cache.has(r.id));
-    if (added.size) changes.push(`Roles added: ${added.map((r) => r.name).join(', ')}`);
-    if (removed.size) changes.push(`Roles removed: ${removed.map((r) => r.name).join(', ')}`);
-    if (!changes.length) return;
-    return sendLog(newM.guild, 'member_update', new EmbedBuilder().setColor(0x3498db)
-      .setTitle('Member updated').setDescription(`<@${newM.id}>\n${changes.join('\n')}`));
+    if (o.nickname !== n.nickname) {
+      const t = await executor(n.guild, AuditLogEvent.MemberUpdate, n.id);
+      await log(n.guild, 'nickname_update', 'Nickname changed', 0x3498db, [
+        `<@${n.id}>`, `\`${o.nickname ?? '—'}\` → \`${n.nickname ?? '—'}\``, ...(t ? [`By: ${t.by}`] : [])]);
+    }
+    const added = n.roles.cache.filter((r) => !o.roles.cache.has(r.id));
+    const removed = o.roles.cache.filter((r) => !n.roles.cache.has(r.id));
+    if (added.size || removed.size) {
+      const t = await executor(n.guild, AuditLogEvent.MemberRoleUpdate, n.id);
+      const by = t ? [`By: ${t.by}`] : [];
+      if (added.size) await log(n.guild, 'role_add', 'Role(s) given', 0x2ecc71, [`<@${n.id}>`, added.map((r) => `<@&${r.id}>`).join(' '), ...by]);
+      if (removed.size) await log(n.guild, 'role_remove', 'Role(s) removed', 0xe74c3c, [`<@${n.id}>`, removed.map((r) => `<@&${r.id}>`).join(' '), ...by]);
+    }
+    if (o.avatar !== n.avatar) await log(n.guild, 'avatar_update', 'Server avatar changed', 0x9b59b6, [`<@${n.id}>`, n.avatarURL() ?? 'removed']);
   });
 
   client.on('guildBanAdd', async (ban) => {
     const b = await executor(ban.guild, AuditLogEvent.MemberBanAdd, ban.user.id);
-    return sendLog(ban.guild, 'ban', new EmbedBuilder().setColor(0xc0392b).setTitle('Member banned')
-      .setDescription(`${ban.user.tag}\nBy: ${b?.by ?? 'unknown'}\nReason: ${b?.reason ?? 'none'}`));
+    return log(ban.guild, 'ban', 'Member banned', 0xc0392b, [ban.user.tag, `By: ${b?.by ?? 'unknown'}`, `Reason: ${b?.reason ?? 'none'}`]);
   });
-
-  client.on('guildBanRemove', (ban) =>
-    sendLog(ban.guild, 'unban', new EmbedBuilder().setColor(0x27ae60).setTitle('Member unbanned')
-      .setDescription(ban.user.tag)));
+  client.on('guildBanRemove', async (ban) => {
+    const b = await executor(ban.guild, AuditLogEvent.MemberBanRemove, ban.user.id);
+    return log(ban.guild, 'unban', 'Member unbanned', 0x27ae60, [ban.user.tag, `By: ${b?.by ?? 'unknown'}`]);
+  });
 }

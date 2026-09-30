@@ -17,8 +17,10 @@ const client = new Client({
     GatewayIntentBits.GuildWebhooks,
     GatewayIntentBits.GuildInvites,
     GatewayIntentBits.GuildExpressions,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildScheduledEvents,
   ],
-  partials: [Partials.Message, Partials.GuildMember],
+  partials: [Partials.Message, Partials.GuildMember, Partials.Reaction, Partials.User],
 });
 
 registerMessageEvents(client);
@@ -28,6 +30,10 @@ registerServerEvents(client);
 startRetentionJob();
 
 client.on(Events.InteractionCreate, async (i) => {
+  if (i.isAutocomplete()) {
+    await commands.get(i.commandName)?.autocomplete?.(i).catch(() => undefined);
+    return;
+  }
   if (!i.isChatInputCommand() || !i.inGuild()) return;
   await commands.get(i.commandName)?.execute(i).catch(async (e) => {
     console.error(e);

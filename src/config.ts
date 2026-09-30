@@ -9,6 +9,8 @@ export const config = {
   clientId: required('DISCORD_CLIENT_ID'),
   databaseUrl: required('DATABASE_URL'),
   encryptionKey: Buffer.from(required('MESSAGE_ENCRYPTION_KEY'), 'hex'),
+  attachmentDir: process.env.ATTACHMENT_DIR ?? './data/attachments',
+  maxAttachmentBytes: Number(process.env.MAX_ATTACHMENT_BYTES ?? 8 * 1024 * 1024),
   defaultRetentionDays: Number(process.env.DEFAULT_RETENTION_DAYS ?? 7),
 };
 
