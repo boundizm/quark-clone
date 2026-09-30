@@ -15,6 +15,9 @@ Enable the **Server Members** and **Message Content** privileged intents in the 
 In Discord: `/logging all #logs`.
 
 ## Commands
-- `/logging set <event> <channel>` · `/logging all <channel>` · `/logging disable <event>` · `/logging retention <days>`
+- `/logging` — `set`, `all`, `disable`, `spoiler`, `ignore`, `retention`
+- `/ban` `/unban` `/kick` `/mute` `/unmute` — moderation (reasons go to the audit log)
+- `/tags` — `send`, `list`, `manage create|delete`
+- `/help` `/commands` `/invite`
 
 See [docs/SPEC.md](docs/SPEC.md) for the roadmap.

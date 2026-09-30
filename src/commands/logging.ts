@@ -20,6 +20,11 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('disable').setDescription('Stop logging an event type')
     .addStringOption((o) => o.setName('event').setDescription('Event type').setRequired(true)
       .addChoices(...LOG_EVENT_TYPES.map((e) => ({ name: e, value: e })))))
+  .addSubcommand((s) => s.setName('spoiler').setDescription('Hide log contents behind spoilers')
+    .addBooleanOption((o) => o.setName('enabled').setDescription('On/off').setRequired(true)))
+  .addSubcommand((s) => s.setName('ignore').setDescription('Toggle ignoring a channel or user')
+    .addChannelOption((o) => o.setName('channel').setDescription('Channel to ignore'))
+    .addUserOption((o) => o.setName('user').setDescription('User to ignore')))
   .addSubcommand((s) => s.setName('retention').setDescription('Set message retention in days')
     .addIntegerOption((o) => o.setName('days').setDescription('1-30').setMinValue(1).setMaxValue(30).setRequired(true)));
 
@@ -43,6 +48,19 @@ export async function execute(i: ChatInputCommandInteraction) {
     await pool.query('DELETE FROM log_channels WHERE guild_id=$1 AND event_type=$2',
       [i.guildId, i.options.getString('event', true)]);
     return void i.reply({ content: 'Disabled.', ephemeral: true });
+  }
+  if (sub === 'spoiler') {
+    const on = i.options.getBoolean('enabled', true);
+    await pool.query(`INSERT INTO guild_settings (guild_id, spoiler_logs) VALUES ($1,$2)
+      ON CONFLICT (guild_id) DO UPDATE SET spoiler_logs = EXCLUDED.spoiler_logs`, [i.guildId, on]);
+    return void i.reply({ content: `Spoiler mode ${on ? 'enabled' : 'disabled'}.`, ephemeral: true });
+  }
+  if (sub === 'ignore') {
+    const target = i.options.getChannel('channel') ?? i.options.getUser('user');
+    if (!target) return void i.reply({ content: 'Provide a channel or user.', ephemeral: true });
+    const del = await pool.query('DELETE FROM log_ignores WHERE guild_id=$1 AND target_id=$2', [i.guildId, target.id]);
+    if (!del.rowCount) await pool.query('INSERT INTO log_ignores (guild_id, target_id) VALUES ($1,$2)', [i.guildId, target.id]);
+    return void i.reply({ content: del.rowCount ? 'No longer ignored.' : 'Now ignored.', ephemeral: true });
   }
   if (sub === 'retention') {
     const days = i.options.getInteger('days', true);

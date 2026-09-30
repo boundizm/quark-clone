@@ -5,9 +5,12 @@
 - Member join/leave/update (nickname, roles), bans/unbans, voice join/leave/move
 - Per-event log channel routing, per-guild retention with hourly cleanup
 
+- Commands at parity with the competitor's documented list: help, commands, invite, logging (spoiler/ignore), ban, unban, kick, mute, unmute, tags
+- Kick/timeout/ban events attributed to moderator + reason via audit log
+
 ## Next
-1. Audit-log lookup to attribute moderator + reason for bans/kicks/timeouts/deletions
-2. Kick, timeout, role/channel/webhook/server-settings events
+1. Moderator attribution for message deletions; edit-history viewer
+2. Role/channel/webhook/server-settings events
 3. Attachment archiving (encrypted object storage)
 4. Web dashboard (Next.js + Discord OAuth2), public REST API + OpenAPI
 5. Message search, filters/ignore lists (channels, roles, users)

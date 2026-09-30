@@ -1,6 +1,6 @@
 import { Client, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { config } from './config.js';
-import * as logging from './commands/logging.js';
+import { commands } from './commands/index.js';
 import { registerMemberEvents } from './events/members.js';
 import { registerMessageEvents, startRetentionJob } from './events/messages.js';
 import { registerVoiceEvents } from './events/voice.js';
@@ -23,9 +23,12 @@ registerVoiceEvents(client);
 startRetentionJob();
 
 client.on(Events.InteractionCreate, async (i) => {
-  if (i.isChatInputCommand() && i.commandName === logging.data.name) {
-    await logging.execute(i).catch(console.error);
-  }
+  if (!i.isChatInputCommand() || !i.inGuild()) return;
+  await commands.get(i.commandName)?.execute(i).catch(async (e) => {
+    console.error(e);
+    const msg = { content: 'Command failed (check my permissions and role position).', ephemeral: true };
+    await (i.replied || i.deferred ? i.followUp(msg) : i.reply(msg)).catch(() => undefined);
+  });
 });
 
 client.once(Events.ClientReady, (c) => console.log(`Ready as ${c.user.tag}`));

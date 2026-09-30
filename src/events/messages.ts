@@ -2,7 +2,7 @@ import { EmbedBuilder, type Client, type Message, type PartialMessage } from 'di
 import { config } from '../config.js';
 import { decrypt, encrypt } from '../crypto.js';
 import { pool } from '../db.js';
-import { sendLog } from '../logger.js';
+import { isIgnored, sendLog } from '../logger.js';
 
 async function retentionDays(guildId: string): Promise<number> {
   const { rows } = await pool.query('SELECT retention_days FROM guild_settings WHERE guild_id = $1', [guildId]);
@@ -12,6 +12,7 @@ async function retentionDays(guildId: string): Promise<number> {
 export function registerMessageEvents(client: Client) {
   client.on('messageCreate', async (msg: Message) => {
     if (!msg.guild || msg.author.bot) return;
+    if (await isIgnored(msg.guild.id, msg.channelId, msg.author.id)) return;
     const days = await retentionDays(msg.guild.id);
     const content = [msg.content, ...msg.attachments.map((a) => a.url)].join('\n');
     await pool.query(
