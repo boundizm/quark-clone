@@ -1,5 +1,6 @@
 import { PermissionFlagsBits, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 import { pool } from '../db.js';
+import { limitsFor } from '../tiers.js';
 
 export const data = new SlashCommandBuilder().setName('tags').setDescription('Reusable message snippets')
   .addSubcommand((s) => s.setName('send').setDescription('Send a tag')
@@ -21,6 +22,8 @@ export async function execute(i: ChatInputCommandInteraction) {
       return void i.reply({ content: 'You need Manage Messages.', ephemeral: true });
     const name = i.options.getString('name', true).toLowerCase();
     if (sub === 'create') {
+      const n = await pool.query('SELECT count(*)::int AS c FROM tags WHERE guild_id=$1 AND name<>$2', [gid, name]);
+      if (n.rows[0].c >= (await limitsFor(gid)).maxTags) return void i.reply({ content: 'Tag limit reached for your plan.', ephemeral: true });
       await pool.query(`INSERT INTO tags (guild_id, name, content, created_by) VALUES ($1,$2,$3,$4)
         ON CONFLICT (guild_id, name) DO UPDATE SET content = EXCLUDED.content`,
         [gid, name, i.options.getString('content', true), i.user.id]);

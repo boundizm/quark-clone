@@ -14,8 +14,13 @@ npm run dev
 Enable the **Server Members** and **Message Content** privileged intents in the Discord developer portal.
 In Discord: `/logging all #logs`.
 
+### Dashboard
+Set `DISCORD_CLIENT_SECRET`, `SESSION_SECRET`, `PUBLIC_URL` and add `<PUBLIC_URL>/auth/callback` as an OAuth2 redirect
+in the developer portal. The dashboard is served on `PORT` (default 3000).
+
 ## Commands
-- `/logging` — `set`, `all`, `disable`, `spoiler`, `ignore`, `retention`
+- `/logging` — `set`, `all`, `disable`, `show`, `spoiler`, `ignore`, `retention` (categories or single types, with autocomplete)
+- `/history <message_id>` — edit history
 - `/ban` `/unban` `/kick` `/mute` `/unmute` — moderation (reasons go to the audit log)
 - `/tags` — `send`, `list`, `manage create|delete`
 - `/help` `/commands` `/invite`

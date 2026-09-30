@@ -12,9 +12,14 @@
     "migrate": "tsx src/migrate.ts",
     "deploy-commands": "tsx src/deploy-commands.ts"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/static": "^10.1.5",
     "discord.js": "^14.16.3",
+    "fastify": "^5.12.5",
     "pg": "^8.13.1"
   },
   "devDependencies": {

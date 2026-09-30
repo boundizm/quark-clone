@@ -10,6 +10,10 @@
 
 - Role, channel, webhook, server, emoji, invite and thread events (moderator via audit log where available)
 
+- Full log-type catalog (8 categories, ~65 types) with category + per-type routing, autocomplete in `/logging`
+- Message attribution (who deleted), bulk delete (text export), pins, reactions, polls, threads, edit history (`/history`), encrypted attachment archive
+- Web dashboard (Discord OAuth2) + REST API under `/api`, free/premium tier limits (`src/tiers.ts`)
+
 ## Next
 1. Moderator attribution for message deletions; edit-history viewer
 3. Attachment archiving (encrypted object storage)

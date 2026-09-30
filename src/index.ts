@@ -1,6 +1,7 @@
 import { Client, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { config } from './config.js';
 import { commands } from './commands/index.js';
+import { startApi } from './api/server.js';
 import { registerMemberEvents } from './events/members.js';
 import { registerMessageEvents, startRetentionJob } from './events/messages.js';
 import { registerServerEvents } from './events/server.js';
@@ -44,3 +45,4 @@ client.on(Events.InteractionCreate, async (i) => {
 
 client.once(Events.ClientReady, (c) => console.log(`Ready as ${c.user.tag}`));
 await client.login(config.token);
+await startApi(client);

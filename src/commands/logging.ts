@@ -3,6 +3,7 @@ import {
   type AutocompleteInteraction, type ChatInputCommandInteraction,
 } from 'discord.js';
 import { pool } from '../db.js';
+import { limitsFor } from '../tiers.js';
 import { ALL_TYPES, CATEGORIES, isValidTarget, log } from '../logger.js';
 
 const targets = [...CATEGORIES, ...ALL_TYPES];
@@ -78,11 +79,17 @@ export async function execute(i: ChatInputCommandInteraction) {
     const target = i.options.getChannel('channel') ?? i.options.getUser('user');
     if (!target) return reply('Provide a channel or user.');
     const del = await pool.query('DELETE FROM log_ignores WHERE guild_id=$1 AND target_id=$2', [gid, target.id]);
+    if (!del.rowCount) {
+      const n = await pool.query('SELECT count(*)::int AS c FROM log_ignores WHERE guild_id=$1', [gid]);
+      if (n.rows[0].c >= (await limitsFor(gid)).maxIgnores) return reply('Ignore list limit reached for your plan.');
+    }
     if (!del.rowCount) await pool.query('INSERT INTO log_ignores (guild_id, target_id) VALUES ($1,$2)', [gid, target.id]);
     await audit(`${del.rowCount ? 'unignored' : 'ignored'} ${target.id}`);
     return reply(del.rowCount ? 'No longer ignored.' : 'Now ignored.');
   }
   const days = i.options.getInteger('days', true);
+  const lim = await limitsFor(gid);
+  if (days > lim.maxRetentionDays) return reply(`Your plan allows up to ${lim.maxRetentionDays} days. Upgrade to Premium for more.`);
   await pool.query(`INSERT INTO guild_settings (guild_id, retention_days) VALUES ($1,$2)
     ON CONFLICT (guild_id) DO UPDATE SET retention_days = EXCLUDED.retention_days`, [gid, days]);
   await audit(`retention ${days}d`);
