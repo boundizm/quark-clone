@@ -11,11 +11,19 @@ export type LogEventType =
   | 'ban'
   | 'unban'
   | 'kick'
-  | 'timeout';
+  | 'timeout'
+  | 'role'
+  | 'channel'
+  | 'webhook'
+  | 'server'
+  | 'emoji'
+  | 'invite'
+  | 'thread';
 
 export const LOG_EVENT_TYPES: LogEventType[] = [
   'message_delete', 'message_edit', 'member_join', 'member_leave',
   'member_update', 'voice', 'ban', 'unban', 'kick', 'timeout',
+  'role', 'channel', 'webhook', 'server', 'emoji', 'invite', 'thread',
 ];
 
 export async function sendLog(guild: Guild, type: LogEventType, embed: EmbedBuilder) {

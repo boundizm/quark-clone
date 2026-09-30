@@ -1,11 +1,6 @@
-import { AuditLogEvent, EmbedBuilder, type Client, type Guild } from 'discord.js';
+import { AuditLogEvent, EmbedBuilder, type Client } from 'discord.js';
+import { executor } from '../audit.js';
 import { sendLog } from '../logger.js';
-
-async function executor(guild: Guild, type: AuditLogEvent, targetId: string) {
-  const logs = await guild.fetchAuditLogs({ type, limit: 5 }).catch(() => null);
-  const e = logs?.entries.find((x) => x.targetId === targetId && Date.now() - x.createdTimestamp < 15_000);
-  return e ? { by: e.executorId ? `<@${e.executorId}>` : 'unknown', reason: e.reason ?? 'none' } : null;
-}
 
 export function registerMemberEvents(client: Client) {
   client.on('guildMemberAdd', (m) =>

@@ -3,6 +3,7 @@ import { config } from './config.js';
 import { commands } from './commands/index.js';
 import { registerMemberEvents } from './events/members.js';
 import { registerMessageEvents, startRetentionJob } from './events/messages.js';
+import { registerServerEvents } from './events/server.js';
 import { registerVoiceEvents } from './events/voice.js';
 
 const client = new Client({
@@ -13,6 +14,9 @@ const client = new Client({
     GatewayIntentBits.MessageContent,      // privileged
     GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildWebhooks,
+    GatewayIntentBits.GuildInvites,
+    GatewayIntentBits.GuildExpressions,
   ],
   partials: [Partials.Message, Partials.GuildMember],
 });
@@ -20,6 +24,7 @@ const client = new Client({
 registerMessageEvents(client);
 registerMemberEvents(client);
 registerVoiceEvents(client);
+registerServerEvents(client);
 startRetentionJob();
 
 client.on(Events.InteractionCreate, async (i) => {

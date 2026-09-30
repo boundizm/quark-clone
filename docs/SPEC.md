@@ -8,9 +8,10 @@
 - Commands at parity with the competitor's documented list: help, commands, invite, logging (spoiler/ignore), ban, unban, kick, mute, unmute, tags
 - Kick/timeout/ban events attributed to moderator + reason via audit log
 
+- Role, channel, webhook, server, emoji, invite and thread events (moderator via audit log where available)
+
 ## Next
 1. Moderator attribution for message deletions; edit-history viewer
-2. Role/channel/webhook/server-settings events
 3. Attachment archiving (encrypted object storage)
 4. Web dashboard (Next.js + Discord OAuth2), public REST API + OpenAPI
 5. Message search, filters/ignore lists (channels, roles, users)
